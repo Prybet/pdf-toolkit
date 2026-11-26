@@ -1,10 +1,12 @@
-"""PDF toolkit built on PyMuPDF and GhostScript"""
+"""PDF toolkit built on PyMuPDF, pdf2docx and Ghostscript"""
 
 import argparse
 import sys
 from pathlib import Path
 import shutil
 import subprocess
+from contextlib import closing
+from io import BytesIO
 
 import pymupdf
 
@@ -76,6 +78,7 @@ def extract(data, minimum):
                 found[f"p{number:03d}-{xref}.{ext}"] = content
     return found
 
+
 def pages(spec, count):
     result = []
     for part in spec.split(","):
@@ -95,10 +98,12 @@ def rotate(data, degrees, spec):
             page.set_rotation((page.rotation + degrees) % 360)
         return dump(doc)
 
+
 def reorder(data, spec):
     with opened(data) as doc:
         doc.select([number - 1 for number in pages(spec, doc.page_count)])
         return dump(doc)
+
 
 def mupdf(data, level):
     dpi, quality = LEVELS[level]
@@ -131,6 +136,15 @@ def shrink(data, level, engine):
     return min(ENGINES[engine](data, level), data, key=len)
 
 
+def word(data):
+    from pdf2docx import Converter
+
+    out = BytesIO()
+    with closing(Converter(stream=data)) as converter:
+        converter.convert(out)
+    return out.getvalue()
+
+
 def read(path):
     return path.read_bytes()
 
@@ -156,6 +170,7 @@ COMMANDS = {
     "extract": lambda a: save(a.folder, extract(read(a.input), a.min)),
     "rotate": lambda a: write(a.output, rotate(read(a.input), a.degrees, a.pages)),
     "reorder": lambda a: write(a.output, reorder(read(a.input), a.order)),
+    "word": lambda a: write(a.output, word(read(a.input))),
 }
 
 
@@ -204,6 +219,10 @@ def build():
     order.add_argument("input", type=Path)
     order.add_argument("output", type=Path)
     order.add_argument("order", help='new order, e.g. "3,1,2-4"; omitted pages are dropped')
+
+    docx = commands.add_parser("word", help="convert a PDF to an editable Word document")
+    docx.add_argument("input", type=Path)
+    docx.add_argument("output", type=Path)
     return parser
 
 

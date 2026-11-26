@@ -1,17 +1,17 @@
 # pdf-toolkit
 
-Small PDF toolkit built on [PyMuPDF](https://pymupdf.readthedocs.io) and, optionally, Ghostscript.
+Small PDF toolkit built on [PyMuPDF](https://pymupdf.readthedocs.io), [pdf2docx](https://github.com/ArtifexSoftware/pdf2docx) and, optionally, Ghostscript.
 Use it as a command line tool or import it as a Python module.
 
-Operations: merge, split, rotate, reorder, images to PDF, PDF to images, extract embedded images, compress.
+Operations: merge, split, rotate, reorder, images to PDF, PDF to images, extract embedded images, compress, PDF to Word.
 
 ## Install
 
 ```bash
-pip install https://github.com/Prybet/pdf-toolkit/archive/refs/tags/v1.0.0.zip
+pip install https://github.com/Prybet/pdf-toolkit/archive/refs/tags/v1.1.0.zip
 ```
 
-This installs the `pdftoolkit` command and `pymupdf`. Ghostscript is only needed for `shrink -e ghost` and is installed separately (`apt install ghostscript`).
+This installs the `pdftoolkit` command and its dependencies (`pymupdf` and `pdf2docx`). Ghostscript is only needed for `shrink -e ghost` and is installed separately (`apt install ghostscript`).
 
 ## Command line
 
@@ -25,6 +25,7 @@ pdftoolkit pack out.pdf one.png two.jpg           # one image per page
 pdftoolkit render in.pdf pages/ -d 150 -f png     # every page to an image (png or jpg)
 pdftoolkit extract in.pdf images/ -m 50           # embedded images, skipping those under 50 px
 pdftoolkit shrink in.pdf out.pdf -l recommended   # compress
+pdftoolkit word in.pdf out.docx                   # editable Word document
 ```
 
 Compression options:
@@ -38,6 +39,8 @@ Compression options:
 
 Page specs accept single pages, ranges and reversed ranges: `1,3-5`, `5-1`.
 
+Word works best with text and simple tables. Complex layouts may not convert faithfully, and scanned PDFs (images only) produce a document without editable text.
+
 ## Python
 
 ```python
@@ -49,6 +52,7 @@ merged = toolkit.merge([data, data])
 part = toolkit.split(data, 1, 3)
 small = toolkit.shrink(data, "recommended", "mupdf")
 images = toolkit.render(data, 150, "png")   # {"p001.png": bytes, ...}
+doc = toolkit.word(data)   # .docx as bytes
 ```
 
 Every function takes and returns `bytes` (or a `dict` of name to `bytes`), so nothing touches the disk.
@@ -56,13 +60,13 @@ Invalid input raises `ValueError`.
 
 ## Interactive launcher
 
-`cli.py` is prompt-based launcher for local use. Drop files onto it or run it directly:
+`cli.py` is a prompt-based launcher for local use. Drop files onto it or run it directly:
 
 ```bash
 python cli.py file1.pdf file2.pdf
 ```
 
-It imports the module from `src/`, so it works from a clone without installing anything else than `pymupdf`.
+It imports the module from `src/`, so it works from a clone without installing the package. It only needs `pymupdf`, plus `pdf2docx` for the PDF to Word option.
 
 ## Development
 

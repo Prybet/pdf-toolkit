@@ -86,6 +86,10 @@ def extract(files, where):
     for path in files:
         toolkit.save(output(path, f"{path.stem}_images", where, files, ""), toolkit.extract(toolkit.read(path), minimum))
 
+def word(files, where):
+    for path in files:
+        toolkit.write(output(path, f"{path.stem}.docx", where, files, ".docx"), toolkit.word(toolkit.read(path)))
+
 
 MENU = {
     "1": ("Merge PDFs", merge),
@@ -96,6 +100,7 @@ MENU = {
     "6": ("Images to PDF", pack),
     "7": ("PDF to images", render),
     "8": ("Extract embedded images", extract),
+    "9": ("PDF to Word", word),
 }
 
 
